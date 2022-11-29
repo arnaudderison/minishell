@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../include/main.h"
 
 
@@ -10,13 +11,15 @@ int main (){
     inputCommand = malloc(sizeof(char) * MAX_BUFFER);
     
     while(1){
-        printf("$a.derison/minishell>");
+        printf("%s%sa.derison~minishell%s$", BOLD,COLOR_BLU, COLOR_NRM);
         readCommand(inputCommand);
-        printf("La commande est :%s", inputCommand);
+        //printf("La commande est :%s", inputCommand);
 
         parseCommand(inputCommand, &command);
 
-        if(strcmp(inputCommand, "exit") == 10){
+        isInternalCommand();
+
+        if((strcmp("exit", inputCommand) == 0) || (strcmp("exit\n", inputCommand) == 0)){
             printf("Bye\n");
             break;
         }
@@ -41,12 +44,13 @@ int parseCommand(char *inputCommand, struct Command *command){
     command->commandName = command->argv[0];
 
     /*-----------FOR DEBUG-----------*/
-
+    /*
     printf("%s : est le nom de la commande\n", command->commandName);
     
     for(int j = 0; j<i; j++){
         printf("command->argv[%i] %s\n",j, command->argv[j]);
     }
+    */
     
 }
 
@@ -62,8 +66,23 @@ int readCommand(char *inputCommand){
     return 0;
 }
 
-int internalCommand(){
-    //if(strcmp("cd", command.commandName))
+int isInternalCommand(){
+    if((strcmp("cd", command.commandName) == 0) || (strcmp("cd\n", command.commandName) == 0)){
+        changeDir();
+        return 1;
+    }
+    return 0;
+}
 
+int changeDir(){
+    if(command.argv[1] == NULL){
+        chdir(getenv("HOME"));
+        return 1;
+    }else{
+        if(chdir(command.argv[1]) == -1){
+            printf("%sMinishell Error:%s    %s%sNo such directory%s\n", COLOR_RED, COLOR_NRM, command.argv[1], COLOR_MAG, COLOR_NRM);
+            return 1;
+        }
+    }
     return 0;
 }
