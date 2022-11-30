@@ -204,8 +204,6 @@ int executePipeCommand(int i){
         return 0;
     }
 
-
-
     /*--------FOR DEBUG--------*/
     
     printf("%d\n", i);
