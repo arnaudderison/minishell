@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include "../include/main.h"
 
 
 struct Command command;
 int main (){
-    char *inputCommand = NULL;
-    inputCommand = malloc(sizeof(char) * MAX_BUFFER);
+    char inputCommand[80];
     
     while(1){
         printf("%s%sa.derison~minishell%s$", BOLD,COLOR_BLU, COLOR_NRM);
@@ -17,14 +18,16 @@ int main (){
 
         parseCommand(inputCommand, &command);
 
-        isInternalCommand();
+        if(isInternalCommand() == 0){
+            executeNormalCommande();
+        }
 
         if((strcmp("exit", inputCommand) == 0) || (strcmp("exit\n", inputCommand) == 0)){
             printf("Bye\n");
             break;
         }
     }
-    free(inputCommand);
+    //free(inputCommand);
     
     return 0;
 }
@@ -36,10 +39,9 @@ int parseCommand(char *inputCommand, struct Command *command){
 
     while(token != NULL){
         command->argv[i] = token; 
-        token =  strtok(NULL, " ");
+        token =  strtok(NULL, " ");    
         i++;
     }
-
     command->argc = i;
     command->commandName = command->argv[0];
 
@@ -84,5 +86,32 @@ int changeDir(){
             return 1;
         }
     }
+    return 0;
+}
+
+int executeNormalCommande(){
+    int pid, status;
+
+    pid = fork();
+    if(pid < 0){
+        fprintf(stderr, "Fork failed:\n");
+        return 0;
+    }
+    else if (pid == 0){
+        /*CHILD*/
+        execvp(command.commandName, command.argv); // replace this process with commandName
+
+        //not execute if not err
+        printf("Child process erreur...\n");
+        return 0;
+    }
+    else if(pid > 0){
+        /*PARENT*/
+        if(waitpid(pid, &status, 0) == -1){
+            perror("waitpid Error...");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     return 0;
 }
